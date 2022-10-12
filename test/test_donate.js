@@ -79,4 +79,50 @@ contract("TestDonate", function (accounts) {
     assert.equal(res[1].toNumber(), 1, "should be succ");
     assert.equal(res[0][0].ipns, "ipns4", "should be ipns2");
   });
+
+  it("test limit", async () => {
+    const inst = await Donate.deployed();
+    let gotEx = false;
+    try {
+      await inst.donate("ipns3", "uuid3", 4 * 24 * 3600, {
+        from: accounts[1],
+        value: 1,
+      });
+    } catch (ex) {
+      assert(ex.message.endsWith("less than limit."), "should exception");
+      gotEx = true;
+    }
+    assert(gotEx, "should got ex");
+
+    gotEx = false;
+    try {
+      await inst.setLimit(7 * 24 * 3600, { from: accounts[1] });
+    } catch (ex) {
+      gotEx = true;
+    }
+    assert(gotEx, "should only be owner");
+    await inst.setLimit(7 * 24 * 3600, { from: accounts[0] });
+
+    await inst.donate("ipns3", "uuid3", 4 * 24 * 3600, {
+      from: accounts[1],
+      value: 1,
+    });
+  });
+
+  it("test balance", async () => {
+    const inst = await Donate.deployed();
+    const balance = await web3.eth.getBalance(accounts[0]);
+    await inst.donate("ipns3", "uuid3", 2 * 24 * 3600, {
+      from: accounts[1],
+      value: 100,
+    });
+    const balance2 = await web3.eth.getBalance(accounts[0]);
+    assert(
+      web3.utils
+        .toBN(balance)
+        .add(web3.utils.toBN(100))
+        .eq(web3.utils.toBN(balance2)),
+      "should have new money"
+    );
+  });
 });
