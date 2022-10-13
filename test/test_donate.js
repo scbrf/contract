@@ -54,30 +54,30 @@ advanceTimeAndBlock = async (time) => {
 contract("TestDonate", function (accounts) {
   it("first donate should be succ", async () => {
     const inst = await Donate.deployed();
-    await inst.donate("ipns1", "uuid1", 1, { from: accounts[1], value: 2 });
+    await inst.donate("ipns1", "uuid1", 100, { from: accounts[1], value: 200 });
     var res = await inst.hot50();
     assert.equal(res[1].toNumber(), 1, "should be succ");
     assert.equal(res[0].length, 50, "should be ipns1");
     assert.equal(res[0][0].ipns, "ipns1", "should be ipns1");
 
-    await inst.donate("ipns2", "uuid2", 2, { from: accounts[1], value: 3 });
+    await inst.donate("ipns2", "uuid2", 100, { from: accounts[1], value: 300 });
     res = await inst.hot50();
     assert.equal(res[1].toNumber(), 2, "should be succ");
     assert.equal(res[0][0].ipns, "ipns2", "should be ipns2");
 
-    await inst.donate("ipns3", "uuid3", 2, { from: accounts[1], value: 1 });
+    await inst.donate("ipns3", "uuid3", 100, { from: accounts[1], value: 100 });
     res = await inst.hot50();
     assert.equal(res[1].toNumber(), 3, "should be succ");
     assert.equal(res[0][2].ipns, "ipns3", "should be ipns3");
 
-    await advanceTimeAndBlock(100);
+    await advanceTimeAndBlock(200);
     res = await inst.hot50();
     assert.equal(res[1].toNumber(), 0, "should be 0");
 
-    await inst.donate("ipns4", "uuid4", 2, { from: accounts[1], value: 3 });
+    await inst.donate("ipns4", "uuid4", 100, { from: accounts[1], value: 300 });
     res = await inst.hot50();
     assert.equal(res[1].toNumber(), 1, "should be succ");
-    assert.equal(res[0][0].ipns, "ipns4", "should be ipns2");
+    assert.equal(res[0][0].ipns, "ipns4", "should be ipn4");
   });
 
   it("test limit", async () => {
@@ -124,5 +124,22 @@ contract("TestDonate", function (accounts) {
         .eq(web3.utils.toBN(balance2)),
       "should have new money"
     );
+  });
+
+  it("test time pause", async () => {
+    const inst = await Donate.deployed();
+    await advanceTimeAndBlock(10 * 24 * 3600); //让之前的都过期
+    for (let i = 0; i < 51; i++) {
+      //增加51个
+      await inst.donate("ipns1", `uuid${i}`, 100 * (i + 1), {
+        from: accounts[1],
+        value: 2000,
+      });
+    }
+    let res = await inst.hot50();
+    assert.equal(res[1].toNumber(), 51, "should be last one");
+    await advanceTimeAndBlock(10000);
+    res = await inst.hot50();
+    assert.equal(res[1].toNumber(), 1, "should be last one");
   });
 });
