@@ -14,7 +14,7 @@ module.exports = {
           `https://goerli.infura.io/v3/${PROJECT_ID}`
         ),
       network_id: 5,
-      gasPrice: 22000000000,
+      gasPrice: 68000000000,
     },
   },
 
