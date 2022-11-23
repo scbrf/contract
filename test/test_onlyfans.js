@@ -84,6 +84,8 @@ contract("TestOnlyfans", function (accounts) {
     const inst = await Onlyfans.deployed();
     await inst.registerPlanet(
       "0x000102030405060708090a0b0c0d0e0f",
+      "0x01",
+      "0x01",
       accounts[0],
       1000
     );

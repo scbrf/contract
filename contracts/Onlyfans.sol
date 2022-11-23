@@ -11,17 +11,19 @@ contract Onlyfans is Ownable {
   struct Planet {
     uint price; //per day
     address owner;
+    bytes32 r;
+    bytes32 s;
     mapping(address=>uint) idxes;
     Fan[] fans;
   }
-  mapping(string => Planet) store;
+  mapping(bytes32 => Planet) store;
   uint public rate = 30;
 
-  event PlanetAdded(string ipns, address owner, uint price);
-  event PlanetModified(string ipns, address owner,uint price);
-  event FanAdded(string ipns, address fan, uint expire);
+  event PlanetAdded(bytes32 ipns, address owner, uint price);
+  event PlanetModified(bytes32 ipns, address owner,uint price);
+  event FanAdded(bytes32 ipns, address fan, uint expire);
 
-  function myfans(string memory ipns) public view returns (Fan[] memory) {
+  function myfans(bytes32 ipns) public view returns (Fan[] memory) {
     uint total = 0;
     for (uint i=0;i<store[ipns].fans.length;i++) {
       if (store[ipns].fans[i].expire >= block.timestamp) {
@@ -44,14 +46,23 @@ contract Onlyfans is Ownable {
     rate = value;
   }
 
-  function registerPlanet(string memory ipns, address owner, uint price) public {
+  /**
+    when regist planet, need provide public key of ipns, sign owner + price,
+    client should check sign before do subscribe
+   */
+  function registerPlanet(bytes32 ipns, bytes32 r, bytes32 s, address owner, uint price) public {
     require(store[ipns].owner == address(0x0) || msg.sender == store[ipns].owner, "only allowed by old owner");
     require(price > 0, "price should large than 0");
+
     store[ipns].price = price;
     store[ipns].owner = owner;
+    store[ipns].r = r;
+    store[ipns].s = s;
+
     if (store[ipns].fans.length == 0) {
       store[ipns].fans.push(Fan("", 1)); //first element invalid
     }
+
     emit PlanetModified(ipns, owner, price);
   }
 
@@ -59,7 +70,7 @@ contract Onlyfans is Ownable {
     return address(uint160(uint256(keccak256(pubkey)))) == addr;
   }
 
-  function subscribe(string memory ipns, uint duration, bytes memory pubkey) payable public {
+  function subscribe(bytes32 ipns, uint duration, bytes memory pubkey) payable public {
     require(checkPubKey(pubkey, msg.sender), "pubkey mismatch");
     require(store[ipns].owner != address(0x0), "has owner");
     require(msg.value == duration * store[ipns].price, "need exactly equal value!");
