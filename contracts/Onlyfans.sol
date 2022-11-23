@@ -11,8 +11,7 @@ contract Onlyfans is Ownable {
   struct Planet {
     uint price; //per day
     address owner;
-    bytes32 r;
-    bytes32 s;
+    bytes signature;
     mapping(address=>uint) idxes;
     Fan[] fans;
   }
@@ -23,6 +22,10 @@ contract Onlyfans is Ownable {
   event PlanetModified(bytes32 ipns, address owner,uint price);
   event FanAdded(bytes32 ipns, address fan, uint expire);
 
+  function planet(bytes32 ipns) public view returns (uint, address, bytes memory) {
+    return (store[ipns].price, store[ipns].owner, store[ipns].signature);
+  }
+ 
   function myfans(bytes32 ipns) public view returns (Fan[] memory) {
     uint total = 0;
     for (uint i=0;i<store[ipns].fans.length;i++) {
@@ -50,14 +53,13 @@ contract Onlyfans is Ownable {
     when regist planet, need provide public key of ipns, sign owner + price,
     client should check sign before do subscribe
    */
-  function registerPlanet(bytes32 ipns, bytes32 r, bytes32 s, address owner, uint price) public {
+  function registerPlanet(bytes32 ipns, bytes memory signature, address owner, uint price) public {
     require(store[ipns].owner == address(0x0) || msg.sender == store[ipns].owner, "only allowed by old owner");
     require(price > 0, "price should large than 0");
 
     store[ipns].price = price;
     store[ipns].owner = owner;
-    store[ipns].r = r;
-    store[ipns].s = s;
+    store[ipns].signature = signature;
 
     if (store[ipns].fans.length == 0) {
       store[ipns].fans.push(Fan("", 1)); //first element invalid
