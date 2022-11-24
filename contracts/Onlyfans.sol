@@ -18,9 +18,8 @@ contract Onlyfans is Ownable {
   mapping(bytes32 => Planet) store;
   uint public rate = 30;
 
-  event PlanetAdded(bytes32 ipns, address owner, uint price);
-  event PlanetModified(bytes32 ipns, address owner,uint price);
-  event FanAdded(bytes32 ipns, address fan, uint expire);
+  event PlanetRegistered(bytes32 indexed ipns, address indexed owner, uint price);
+  event FanAdded(bytes32 indexed ipns, address indexed fan, uint expire);
 
   function planet(bytes32 ipns) public view returns (uint, address, bytes memory) {
     return (store[ipns].price, store[ipns].owner, store[ipns].signature);
@@ -65,7 +64,7 @@ contract Onlyfans is Ownable {
       store[ipns].fans.push(Fan("", 1)); //first element invalid
     }
 
-    emit PlanetModified(ipns, owner, price);
+    emit PlanetRegistered(ipns, owner, price);
   }
 
   function checkPubKey(bytes memory pubkey, address addr) internal pure  returns (bool){
