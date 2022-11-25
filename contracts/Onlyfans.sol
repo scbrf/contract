@@ -82,7 +82,7 @@ contract Onlyfans is Ownable {
       idx = store[ipns].fans.length - 1;
     }
     uint expire = store[ipns].fans[idx].expire > block.timestamp ? store[ipns].fans[idx].expire : block.timestamp;
-    store[ipns].fans[idx].expire = expire + duration;
+    store[ipns].fans[idx].expire = expire + duration * 24 * 3600;
 
     uint fee = msg.value * rate / 100;
     uint left = msg.value - fee;
