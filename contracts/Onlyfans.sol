@@ -25,7 +25,17 @@ contract Onlyfans is Ownable {
     return (store[ipns].price, store[ipns].owner, store[ipns].signature);
   }
  
-  function myfans(bytes32 ipns) public view returns (Fan[] memory) {
+  function planetFans(bytes32 ipns, bool senderOnly) public view returns (Fan[] memory) {
+    if (senderOnly) {
+      uint senderIdx = store[ipns].idxes[msg.sender];
+      if (senderIdx != 0) {
+        Fan[] memory ret1 = new Fan[](1);
+        ret1[0] = store[ipns].fans[senderIdx];
+        return ret1;
+      }
+      return new Fan[](0);
+    }
+
     uint total = 0;
     for (uint i=0;i<store[ipns].fans.length;i++) {
       if (store[ipns].fans[i].expire >= block.timestamp) {
@@ -80,6 +90,7 @@ contract Onlyfans is Ownable {
     if (idx == 0) {
       store[ipns].fans.push(Fan(pubkey, 0));
       idx = store[ipns].fans.length - 1;
+      store[ipns].idxes[msg.sender] = idx;
     }
     uint expire = store[ipns].fans[idx].expire > block.timestamp ? store[ipns].fans[idx].expire : block.timestamp;
     store[ipns].fans[idx].expire = expire + duration * 24 * 3600;

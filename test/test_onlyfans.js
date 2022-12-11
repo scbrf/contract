@@ -97,7 +97,14 @@ contract("TestOnlyfans", function (accounts) {
         value: 7000,
       }
     );
-    const fans = await inst.myfans("0x000102030405060708090a0b0c0d0e0f");
+    let fans = await inst.planetFans(
+      "0x000102030405060708090a0b0c0d0e0f",
+      false
+    );
     assert(fans.length == 1, "have 1 fans");
+    fans = await inst.planetFans("0x000102030405060708090a0b0c0d0e0f", true, {
+      from: accounts[1],
+    });
+    assert(fans.length == 1, "I should be a fan");
   });
 });
