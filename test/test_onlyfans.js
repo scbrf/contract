@@ -55,18 +55,15 @@ advanceTimeAndBlock = async (time) => {
 const wallet = new ethers.Wallet(
   "0xc39574f139c922be5dfefebb889a2b85eadb8bfc1df5dd98d5d6ca1a139207a5"
 );
+const selfMeta = "0x000102030405060708090a0b0c0d0e0e";
+const ipns = "0x000102030405060708090a0b0c0d0e0f";
 contract("TestOnlyfans", function (accounts) {
   it("subscribe none should be fail", async () => {
     const inst = await Onlyfans.deployed();
     try {
-      await inst.subscribe(
-        "0x000102030405060708090a0b0c0d0e0f",
-        7,
-        "0x" + wallet.publicKey.substring(4),
-        {
-          from: accounts[1],
-        }
-      );
+      await inst.subscribe(selfMeta, ipns, 7, {
+        from: accounts[1],
+      });
     } catch (ex) {
       assert(ex.message.endsWith("has owner."), "should exception");
     }
@@ -82,29 +79,12 @@ contract("TestOnlyfans", function (accounts) {
 
   it("normal subscribe", async () => {
     const inst = await Onlyfans.deployed();
-    await inst.registerPlanet(
-      "0x000102030405060708090a0b0c0d0e0f",
-      "0x01",
-      accounts[0],
-      1000
-    );
-    await inst.subscribe(
-      "0x000102030405060708090a0b0c0d0e0f",
-      7,
-      "0x" + wallet.publicKey.substring(4),
-      {
-        from: accounts[1],
-        value: 7000,
-      }
-    );
-    let fans = await inst.planetFans(
-      "0x000102030405060708090a0b0c0d0e0f",
-      false
-    );
-    assert(fans.length == 1, "have 1 fans");
-    fans = await inst.planetFans("0x000102030405060708090a0b0c0d0e0f", true, {
+    const result1 = await inst.registerPlanet(selfMeta, ipns, 1000);
+    assert(result1.logs.length == 1, "should have logs");
+    const result2 = await inst.subscribe(selfMeta, ipns, 7, {
       from: accounts[1],
+      value: 7000,
     });
-    assert(fans.length == 1, "I should be a fan");
+    assert(result2.logs.length == 1, "should have logs");
   });
 });
